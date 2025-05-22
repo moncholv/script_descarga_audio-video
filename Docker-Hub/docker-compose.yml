@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  descargador:
+    image: moncholv/descargador-audio-video:latest
+    container_name: descargador-audio-video
+    volumes:
+      - ./descargas:/app/descargas
+    environment:
+      - DESTINO_DESCARGAS=/app/descargas
+    stdin_open: true
+    tty: true
