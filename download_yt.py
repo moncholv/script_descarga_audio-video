@@ -1,13 +1,22 @@
-# Si no quieres añadir al PATH de forma permanente la ruta, tendrás que hacer un export 
-# a la ruta donde tengas el binario para poder ejecutar en cada sesión:
+# Si no quieres añadir al PATH de forma permanente la ruta en las variables de sistema, 
+# tendrás que hacer un export a la ruta donde tengas el binario para poder ejecutar en cada sesión:
 # export PATH=$PATH:/c/Users/moncholv/Documents/apps_portables/ffmpeg/bin
 
+import shutil
+import sys
 from pytube import Playlist
 import yt_dlp
 
 
+def verificar_ffmpeg():
+    if not shutil.which("ffmpeg"):
+        print("❌ Error: No se encontró ffmpeg en el PATH del sistema.")
+        print("Instálalo y asegúrate de que esté accesible para este script.")
+        sys.exit(1)
+
+
 def mostrar_menu():
-    print("---- moncholv video & audio download script ----")
+    print("---- RLV video & audio download script ----")
     print("Selecciona una opción:")
     print("1. Descargar audio.")
     print("2. Descargar audios de lista de reproducción.")
