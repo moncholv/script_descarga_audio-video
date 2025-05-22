@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  descargador:
+    build: .
+    container_name: descarga-audio-video
+    volumes:
+      - ./descargas:/app/descargas
+    stdin_open: true
+    tty: true
+    environment:
+      - DESTINO_DESCARGAS=/app/descargas
