@@ -225,10 +225,10 @@ Reintentar más tarde, actualizar yt-dlp, o probar otra red.
 
 ## Licencia
 
-Indica la licencia elegida (por ejemplo, MIT) y añade el archivo LICENSE al repositorio.
+
 
 ## Créditos
 
-**Autoría:** moncholv en colaboración con Eddevios (Edu).
+**Autoría:** moncholv en colaboración con Eddevios.
 
 Basado en yt-dlp para descarga y FFmpeg para procesamiento.
