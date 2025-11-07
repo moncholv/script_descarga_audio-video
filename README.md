@@ -1,234 +1,403 @@
-# RLV Video & Audio Download Script
+# Moncholv video & audio download script
 
-Script interactivo en Python para descargar audios y vídeos de YouTube (y otros sitios soportados por yt-dlp). 
+Script interactivo en Python para descargar audio y vídeo desde YouTube y muchas otras fuentes (ej. SoundCloud) de forma individual o desde listas de reproducción.
+Utiliza las herramientas yt-dlp y ffmpeg.
+Requiere Python 3.7 o superior. 
+Es multiplataforma: Windows, MacOS (Intel/Silicon/M1/M2/M3) y Linux (Debian, Ubuntu, Arch, SteamOS).
 
-## Características
-
-- Elegir entre descargar solo audio (incluye listas) o vídeo (incluye listas)
-- Seleccionar de forma interactiva la calidad de vídeo entre los formatos disponibles
-- Combinar automáticamente el vídeo elegido con el mejor audio disponible y exportar en MP4
-- Elegir la carpeta de destino con detección automática de Descargas (fallback a Escritorio)
+---
 
 ## Requisitos
 
-- **Python 3.8 o superior**
-- **yt-dlp** (última versión recomendada): `pip install -U yt-dlp`
-- **FFmpeg** instalado y en el PATH del sistema (necesario para:
-  - Combinar vídeo+audio (merge) en MP4
-  - Convertir a MP3 en el modo audio)
-- **Conexión a Internet**
+### Antes de ejecutar el script, asegúrate de tener lo siguiente instalado:
 
-### Notas importantes
+- Python 3.7 o superior
+- [`yt-dlp`](https://github.com/yt-dlp/yt-dlp) (gestiona descargas de vídeo/audio/playlists)
+- [FFmpeg](https://ffmpeg.org/) (necesario para convertir audios a mp3 y mezclar vídeo/audio)
 
-- El script ya no usa pytube. Puede eliminarse de dependencias para evitar confusión
-- Sin FFmpeg, yt-dlp no podrá unir streams ni convertir audio a mp3; el script mostrará advertencia
+---
 
 ## Estructura del proyecto
 
 ```
-script_descarga_audio-video/
+Moncho_YT/
 ├── assets/
-│   └── Moncho_YT.icns
-├── descargador/
-│   ├── build_and_push.sh
-│   ├── docker-compose.yml
-│   ├── Dockerfile
-│   ├── Makefile
-│   ├── README.md
-│   ├── requirements.txt
-│   └── script_descarga.py
-├── Docker-Hub/
-│   └── docker-compose.yml
-├── ejecutable/
-│   └── windows/
-│       ├── requirements.txt
-│       └── script_descarga.py
-├── README.md
-└── script_descarga.exe
+│   ├── Moncho_YT.icns      # Icono de la aplicación (macOS)
+│   ├── Moncho_YT.ico       # Icono de la aplicación (Windows)
+│   └── Moncho_YT.png       # Imagen de icono de la aplicación (Windows)
+├── binaries/
+│   ├── yt-dlp              # Binario yt-dlp macOS
+│   ├── ffmpeg              # Binario ffmpeg macOS
+│   ├── yt-dlp.exe          # Binario yt-dlp Windows
+│   ├── ffmpeg.exe          # Binario ffmpeg Windows
+│   ├── yt-dlp-linux        # Binario yt-dlp Linux
+│   └── ffmpeg-linux        # Binario ffmpeg Linux
+├── build/                  # Archivos temporales de construcción (generado por PyInstaller)
+├── dist/                   # Ejecutables finales (generado por PyInstaller)
+│   ├── Moncho_YT.exe       # Ejecutable Windows
+│   ├── Moncho_YT           # Ejecutable Linux
+│   └── Moncho_YT.app/      # Aplicación empaquetada (macOS)
+├── docker/
+│   └── docker-compose.yml  # Configuración Docker
+├── venv/                   # Entorno virtual de Python
+├── launcher.py             # Script lanzador (si aplica)
+├── Makefile                # Comandos automatizados
+├── Moncho_YT_app.spec      # Configuración PyInstaller (macOS)
+├── Moncho_YT_windows.spec  # Configuración PyInstaller (Windows)
+├── Moncho_YT_linux.spec    # Configuración PyInstaller (Linux)
+├── README.md               # Este archivo
+├── requirements.txt        # Dependencias Python
+└── script_descarga.py      # Script principal
 ```
 
-## Instalación
+---
 
-### 1. Clonar el repositorio
+## Instalación de dependencias
 
+El script utiliza FFmpeg para convertir audio a formato MP3, por lo que debe estar instalado y accesible desde el PATH del sistema.
+
+### Windows:
+Descarga FFmpeg desde https://ffmpeg.org/download.html y añade el binario a tu PATH.
+
+Una vez descargado, extraemos el zip y añadimos temporalmente el path del binario (sustituyendo la ruta del binario) con:
 ```bash
-git clone https://github.com/moncholv/script_descarga_audio-video.git
-cd script_descarga_audio-video/descargador
+set PATH=%PATH%;C:\ruta\a\ffmpeg\bin
 ```
 
-### 2. Instalar dependencias de Python
-
-```bash
-pip install -U yt-dlp
-```
-
-### 3. Instalar FFmpeg
-
-**Windows:** Descargar binarios, por ejemplo en `C:\ffmpeg\bin`, y añadir esa ruta al PATH del sistema. Verificar con `ffmpeg -version`.
-
-**macOS:** 
+### macOS:
 ```bash
 brew install ffmpeg
 ```
 
-**Linux (Debian/Ubuntu):**
+### Linux:
+
+**Debian/Ubuntu:**
 ```bash
 sudo apt install ffmpeg
 ```
 
-## Uso
+**Fedora:**
+```bash
+sudo dnf install ffmpeg
+```
 
-### Ejecutar el script
+**Arch:**
+```bash
+sudo pacman -S ffmpeg
+```
 
-Desde la terminal en la carpeta "descargador":
+---
 
-- **Windows:** `python script_descarga.py`
-- **macOS/Linux:** `python3 script_descarga.py`
+## Instalación desde código fuente
 
-### Flujo interactivo
+### Python y yt-dlp
 
-1. **Elegir opción:**
-   - Descargar audio
-   - Descargar audios de lista de reproducción
-   - Descargar vídeo
-   - Descargar vídeos de lista de reproducción
+Lo ideal es usar un entorno virtual:
 
-2. **Pegar la URL** (vídeo o playlist)
+```bash
+python3 -m venv venv
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+pip install -r requirements.txt
+```
 
-3. **Elegir carpeta de destino**. Si no se escribe nada, se sugiere automáticamente Descargas; si no existe, fallback a Escritorio. También puede usarse una variable de entorno para fijarla.
+O puedes instalar yt-dlp con Homebrew (Mac):
 
-4. **En modo vídeo** (3 o 4), se listan las calidades disponibles (resolución, fps, contenedor, e indicación de si traen audio o no). Elegir un número o pulsar Enter para "best".
+```bash
+brew install yt-dlp
+```
 
-5. El script descarga y, si es vídeo, combina el itag de vídeo elegido con el mejor audio disponible (m4a) y genera un archivo MP4 final.
+---
 
-6. Al finalizar, el script espera a que se pulse Enter para salir.
+## Cómo usar el script
+
+Desde código fuente:
+
+```bash
+source venv/bin/activate  # En Windows: venv\Scripts\activate
+python3 script_descarga.py
+```
+
+O simplemente:
+
+```bash
+python script_descarga.py
+```
+
+### Menú interactivo:
+
+```
+---- Moncholv video & audio download script ----
+Selecciona una opción:
+1. Descargar video rápido (menor calidad)
+2. Descargar vídeo (elegir calidad)
+3. Descargar vídeos de lista de reproducción
+4. Descargar audio
+5. Descargar audios de lista de reproducción
+```
+
+Introduce el número de la opción y luego proporciona la URL del vídeo o playlist correspondiente.
+
+---
+
+## Ejecutables precompilados
+
+Si prefieres no instalar Python ni dependencias, puedes usar los ejecutables precompilados disponibles en [Releases](https://github.com/moncholv/script_descarga_audio-video/releases).
+
+### **macOS (Intel y Apple Silicon/M1/M2/M3)**
+
+1. Descarga `Moncho_YT.app.zip` desde Releases
+2. Descomprime y mueve `Moncho_YT.app` a tu carpeta **Aplicaciones**
+3. **Primera ejecución** (macOS puede bloquearlo por seguridad):
+   - **Opción A:** Ve a **Preferencias del Sistema** > **Privacidad y seguridad** > **"Abrir de todos modos"**
+   - **Opción B:** Ejecuta en Terminal:
+     ```bash
+     xattr -cr /Applications/Moncho_YT.app
+     open /Applications/Moncho_YT.app
+     ```
+4. Haz doble clic en `Moncho_YT.app` para ejecutar
+
+**Nota:** El ejecutable incluye `yt-dlp` y `ffmpeg`, no necesitas instalar nada más.
+
+---
+
+### **Windows (64-bit)**
+
+1. Descarga `Moncho_YT-Windows.zip` desde Releases
+2. Descomprime el archivo
+3. Ejecuta `Moncho_YT.exe`
+4. **Si Windows Defender SmartScreen lo bloquea:**
+   - Haz clic en **"Más información"**
+   - Luego en **"Ejecutar de todas formas"**
+
+**Nota:** El ejecutable incluye `yt-dlp` y `ffmpeg`.
+
+---
+
+### **Linux (Ubuntu, Debian, Fedora, Arch, SteamOS/Steam Deck)**
+
+1. Descarga el ejecutable correspondiente desde Releases:
+   - `Moncho_YT-Ubuntu` (Ubuntu/Debian/Mint/Pop!_OS)
+   - `Moncho_YT-Fedora` (Fedora/RHEL/CentOS Stream)
+   - `Moncho_YT-Arch` (Arch/Manjaro/EndeavourOS)
+   - `Moncho_YT-SteamOS` (Steam Deck)
+
+2. Dale permisos de ejecución:
+```bash
+chmod +x Moncho_YT-Ubuntu
+```
+
+3. Ejecuta desde terminal:
+```bash
+./Moncho_YT-Ubuntu
+```
+
+**Nota:** El ejecutable incluye `yt-dlp` y `ffmpeg`. Si tienes problemas, instala `ffmpeg` del sistema:
+
+**Ubuntu/Debian:**
+```bash
+sudo apt install ffmpeg
+```
+
+**Fedora:**
+```bash
+sudo dnf install ffmpeg
+```
+
+**Arch:**
+```bash
+sudo pacman -S ffmpeg
+```
+
+---
 
 ## Selección de carpeta de destino
 
-El script determina la carpeta de Descargas del usuario:
+El script permite seleccionar la carpeta de destino. Por defecto ofrece la carpeta de descargas estándar según tu sistema operativo.
 
-- **Windows:** Consulta el registro para obtener la carpeta Descargas; si falla, usa `%UserProfile%\Downloads`; si tampoco existe, usa Escritorio
-- **macOS/Linux:** Usa `$HOME/Downloads`; si no existe, usa Escritorio
+Puedes introducir cualquier ruta manualmente cuando se te pida, y será creada si no existe.
 
-### Variable de entorno
+También puedes usar la variable de entorno `DESTINO_DESCARGAS` si quieres personalizar la salida automáticamente (útil en Docker o scripts automatizados).
 
-Se puede establecer la variable de entorno `DESTINO_DESCARGAS` para forzar una carpeta por defecto sin preguntar:
+---
 
-**Windows (PowerShell):**
-```powershell
-setx DESTINO_DESCARGAS "C:\Users\TU_USUARIO\Downloads\YT"
-```
+## Uso con Docker Compose
 
-**macOS/Linux (bash/zsh):**
-```bash
-export DESTINO_DESCARGAS="$HOME/Downloads/YT"
-```
+Puedes ejecutar este script en un contenedor Docker con todas las dependencias incluidas (Python, FFmpeg, yt-dlp):
 
-Si la carpeta no existe, el script la crea automáticamente.
-
-## Detalles del funcionamiento
-
-### Audio (opciones 1 y 2)
-- Usa formato `"bestaudio/best"` y postprocesa a MP3 con FFmpeg
-- Requiere FFmpeg en PATH para la conversión
-
-### Vídeo (opciones 3 y 4)
-- La función `elegir_calidad(url)` lista formatos de vídeo disponibles (pueden estar "sin audio" por ser streams DASH)
-- El script arma el formato final como: `"{itag_de_video}+bestaudio[ext=m4a]/best"`
-- Hace merge con FFmpeg y fuerza contenedor final MP4 (`merge_output_format="mp4"`)
-
-### Notas sobre "sin audio" en calidades altas
-- Es lo esperado: YouTube distribuye vídeo y audio por separado en calidades medias/altas
-- El script ya añade el mejor audio m4a disponible y hace el merge a MP4
-
-## Ejemplos
-
-### Descargar audio en MP3 de un solo vídeo
-Opción 1, pegar URL, aceptar Descargas; se generará un .mp3 con el título del vídeo.
-
-### Descargar vídeo 1080p con audio
-Opción 3, pegar URL, aceptar Descargas, elegir una entrada 1080p (aunque figure "sin audio"), el script descargará ese vídeo y el mejor audio y los unirá en MP4.
-
-### Descargar lista de reproducción
-- Opción 2 para audio (mp3 por cada elemento)
-- Opción 4 para vídeo (merge vídeo+audio por cada elemento)
-
-## Ejecutar por terminal directamente (sin el script)
-
-Comandos orientativos con yt-dlp:
-
-### Ver formatos disponibles (para ver itags)
-```bash
-yt-dlp -F URL
-```
-
-### Descargar mejor vídeo + mejor audio y combinar en MP4
-```bash
-yt-dlp -f "bestvideo+bestaudio/best" --merge-output-format mp4 -o "%(title)s.%(ext)s" URL
-```
-
-### Limitar a 1080p máximo
-```bash
-yt-dlp -f "bestvideo[height<=1080]+bestaudio/best" --merge-output-format mp4 -o "%(title)s.%(ext)s" URL
-```
-
-### Elegir por itag (ej. vídeo 299 + audio 140)
-```bash
-yt-dlp -f "299+140" --merge-output-format mp4 -o "%(title)s.%(ext)s" URL
-```
-
-### Forzar salida a Descargas
-- **Windows:** `-o "C:/Users/%USERNAME%/Downloads/%(title)s.%(ext)s"`
-- **macOS/Linux:** `-o "$HOME/Downloads/%(title)s.%(ext)s"`
-
-## Docker (opcional)
-
-Si se desea empaquetar el entorno:
-
-- Incluir Python, yt-dlp y FFmpeg en la imagen
-- Montar un volumen local para persistir las descargas (por ejemplo `./descargas`)
-- Ejecutar el contenedor indicando la URL y/o usar el modo interactivo si se desea el menú
-
-### Ejemplo (orientativo)
 ```bash
 docker-compose run descargador
 ```
 
-Guardará los archivos en la carpeta local `./descargas` (si el compose está configurado para montar ese volumen).
+Esto guardará los archivos descargados en la carpeta local `./descargas`.
+
+---
+
+## Compilar tus propios ejecutables
+
+Si deseas compilar los ejecutables tú mismo desde el código fuente:
+
+### Requisitos previos:
+```bash
+pip install pyinstaller
+```
+
+### Descargar binarios necesarios:
+
+Los binarios de `yt-dlp` y `ffmpeg` deben estar en la carpeta `binaries/` antes de compilar.
+
+### **macOS:**
+
+```bash
+mkdir -p binaries
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_macos -o binaries/yt-dlp
+chmod +x binaries/yt-dlp
+cp $(which ffmpeg) binaries/ffmpeg  # Si tienes ffmpeg instalado con Homebrew
+```
+
+**Compilar:**
+```bash
+source venv/bin/activate
+pyinstaller --clean Moncho_YT_app.spec
+```
+
+El ejecutable estará en `dist/Moncho_YT.app`
+
+---
+
+### **Windows:**
+
+**Descargar binarios:**
+- `yt-dlp.exe`: https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+- `ffmpeg.exe`: https://github.com/BtbN/FFmpeg-Builds/releases (busca win64-gpl.zip)
+
+Colócalos en `binaries/yt-dlp.exe` y `binaries/ffmpeg.exe`
+
+**Compilar:**
+```cmd
+venv\Scripts\activate
+pyinstaller --clean Moncho_YT_windows.spec
+```
+
+El ejecutable estará en `dist\Moncho_YT.exe`
+
+---
+
+### **Linux:**
+
+**Descargar binarios:**
+
+```bash
+mkdir -p binaries
+curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o binaries/yt-dlp-linux
+chmod +x binaries/yt-dlp-linux
+```
+
+**FFmpeg (descarga según distro):**
+
+**Opción 1: Copiar del sistema**
+```bash
+# Ubuntu/Debian:
+sudo apt install ffmpeg
+cp $(which ffmpeg) binaries/ffmpeg-linux
+
+# Arch:
+sudo pacman -S ffmpeg
+cp $(which ffmpeg) binaries/ffmpeg-linux
+```
+
+**Opción 2: Descarga estática universal desde [johnvansickle](https://johnvansickle.com/ffmpeg/)**
+```bash
+wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz
+tar -xf ffmpeg-release-amd64-static.tar.xz
+cp ffmpeg-*-amd64-static/ffmpeg binaries/ffmpeg-linux
+chmod +x binaries/ffmpeg-linux
+```
+
+**Compilar en cada distribución:**
+
+Idealmente compila en cada sistema operativo para mejor compatibilidad:
+
+**Ubuntu/Debian:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+pip install pyinstaller
+pyinstaller --clean Moncho_YT_linux.spec
+mv dist/Moncho_YT dist/Moncho_YT-ubuntu
+```
+
+**Arch/Manjaro:**
+```bash
+python -m venv venv
+source venv/bin/activate
+pip install pyinstaller
+pyinstaller --clean Moncho_YT_linux.spec
+mv dist/Moncho_YT dist/Moncho_YT-arch
+```
+
+**SteamOS (Steam Deck):**
+Usa el mismo proceso que Arch (SteamOS está basado en Arch), o compila directamente en el Steam Deck en modo escritorio.
+
+El ejecutable estará en `dist/Moncho_YT`
+
+---
+
+**Importante:** Los binarios de `yt-dlp` y `ffmpeg` deben estar en la carpeta `binaries/` antes de compilar.
+
+---
 
 ## Solución de problemas
 
-### "ffmpeg not found" o "You have requested merging… ffmpeg is not installed"
-Instalar FFmpeg y añadir al PATH; verificar con `ffmpeg -version`.
+### macOS: "La app está dañada y no se puede abrir"
+```bash
+xattr -cr /Applications/Moncho_YT.app
+```
 
-### "Requested format is not available" o HTTP 403 en algunos formatos
-Actualizar yt-dlp (`pip install -U yt-dlp`), probar otro formato/itag o usar "best".
+### Windows: SmartScreen bloquea la ejecución
+Haz clic en "Más información" > "Ejecutar de todas formas"
 
-### La lista muestra muchas entradas "sin audio"
-Es normal; el script ya combina vídeo+audio automáticamente.
+### Linux: "Permiso denegado"
+```bash
+chmod +x Moncho_YT-Ubuntu
+```
 
-### Rutas con espacios o permisos insuficientes
-Usar comillas en rutas y verificar permisos de escritura.
+### Error: "yt-dlp no está disponible"
+Instala yt-dlp en tu sistema:
+```bash
+pip install yt-dlp
+```
+o
+```bash
+brew install yt-dlp
+```
 
-### Descargas lentas o bloqueadas
-Reintentar más tarde, actualizar yt-dlp, o probar otra red.
+### Error: "ffmpeg no está disponible"
+Instala ffmpeg en tu sistema según tu plataforma (ver sección de instalación arriba)
 
-## Estructura del script
+### Error HTTP 403: Forbidden al descargar playlists
+Actualiza yt-dlp:
+```bash
+pip install -U yt-dlp
+```
+o
+```bash
+brew upgrade yt-dlp
+```
 
-- `verificar_ffmpeg()`: Advierte si FFmpeg no está en PATH
-- `mostrar_menu()`: Menú interactivo de opciones
-- `pedir_directorio_destino()`: Sugiere Descargas, fallback a Escritorio, o usa `DESTINO_DESCARGAS` si está definida; crea la carpeta si no existe
-- `elegir_calidad(url)`: Lista calidades de vídeo y devuelve itag del vídeo elegido (o "best" si se pulsa Enter)
-- `main()`: Orquesta el flujo:
-  - Audio: `"bestaudio/best"` + postprocesado a MP3
-  - Vídeo: `"{itag}+bestaudio[ext=m4a]/best"` con merge a MP4
+---
 
-## Licencia
+## Cambios principales en esta versión
 
+- Ahora solo usa yt-dlp (pytube eliminado)
+- Flujos y lógica separados para playlist y elementos individuales
+- Selección automática de carpeta estándar multiplataforma (Windows, MacOS, Linux)
+- Actualización automática de yt-dlp opcional
+- Añadido soporte para playlist y cabeceras de navegador (user-agent) en las descargas para mayor compatibilidad
+- Ejecutables standalone para todas las plataformas con binarios incluidos
 
+---
 
 ## Créditos
 
-**Autoría:** moncholv en colaboración con Eddevios.
-
-Basado en yt-dlp para descarga y FFmpeg para procesamiento.
+- 👤 **Autor original**: [Moncholv](https://github.com/moncholv)  
+- 🤝 **Colaboraciones y mejoras**: [Eddevios (Edu)](https://github.com/eddevios) | [eddevios.com](https://eddevios.com)

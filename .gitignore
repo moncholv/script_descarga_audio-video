@@ -1,4 +1,61 @@
-bin/
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist-packages/
+.pytest_cache/
+.mypy_cache/
+
+# PyInstaller
 build/
 dist/
 *.spec
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+.venv/
+
+# Binarios (NO los subas, son muy pesados)
+# Los usuarios deben descargarlos manualmente o desde releases
+binaries/yt-dlp
+binaries/ffmpeg
+binaries/yt-dlp.exe
+binaries/ffmpeg.exe
+binaries/yt-dlp-linux
+binaries/ffmpeg-linux
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Logs
+*.log
+
+# Carpetas temporales
+tmp/
+temp/
+path/
+
+# Docker volumes
+docker/volumes/
+
+# Archivos de configuración local
+.env
+config.local.yml
