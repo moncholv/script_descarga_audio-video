@@ -12,8 +12,24 @@ import os
 import sys
 import platform
 import subprocess
+from shutil import which
+
+# Variables globales para las rutas de binarios
+YT_DLP_BIN = None
+FFMPEG_BIN = None
 
 # =============== FUNCIONES UTILITARIAS ===============
+
+def get_ytdlp_path():
+    """Busca yt-dlp: primero en la carpeta del ejecutable, luego en PATH"""
+    if getattr(sys, 'frozen', False):
+        # Ejecutable empaquetado con PyInstaller
+        bundle_dir = sys._MEIPASS
+        local_ytdlp = os.path.join(bundle_dir, 'yt-dlp')
+        if os.path.exists(local_ytdlp):
+            return local_ytdlp
+    # Busca en PATH del sistema
+    return which("yt-dlp")
 
 def get_bundled_binary(name):
     """
@@ -42,7 +58,6 @@ def get_bundled_binary(name):
         return binary_path
     
     # Fallback: usar el del sistema (si existe)
-    from shutil import which
     system_binary = which(name)
     if system_binary:
         return system_binary
@@ -50,29 +65,29 @@ def get_bundled_binary(name):
     return None
 
 def check_dependencies():
-    """
-    Verifica que yt-dlp y ffmpeg están disponibles (incluidos o en sistema).
-    """
+    """Verifica que yt-dlp y ffmpeg estén disponibles y configura las rutas globales."""
     global YT_DLP_BIN, FFMPEG_BIN
     
-    YT_DLP_BIN = get_bundled_binary("yt-dlp")
-    FFMPEG_BIN = get_bundled_binary("ffmpeg")
+    YT_DLP_BIN = get_ytdlp_path()
+    FFMPEG_BIN = which("ffmpeg")
     
     if not YT_DLP_BIN:
         print("ERROR: 'yt-dlp' no está disponible.")
+        print("Instálalo con: pip install yt-dlp  o  brew install yt-dlp (Mac)")
         sys.exit(1)
     if not FFMPEG_BIN:
-        print("ERROR: 'ffmpeg' no está disponible.")
+        print("ERROR: 'ffmpeg' no está en el PATH del sistema.")
+        print("Instálalo según tu sistema (brew install ffmpeg, apt install ffmpeg, etc.)")
         sys.exit(1)
     
-    print(f"Usando yt-dlp: {YT_DLP_BIN}")
-    print(f"Usando ffmpeg: {FFMPEG_BIN}")
+    print(f"✓ Usando yt-dlp: {YT_DLP_BIN}")
+    print(f"✓ Usando ffmpeg: {FFMPEG_BIN}")
 
 def check_update():
     """
     Pregunta si se desean actualizar las librerías yt-dlp y ffmpeg (manual).
     """
-    r = input("¿Deseas comprobar y actualizar yt-dlp? (s/n): ").strip().lower()
+    r = input("\n¿Deseas comprobar y actualizar yt-dlp? (s/n): ").strip().lower()
     if r == 's':
         subprocess.call([sys.executable, '-m', 'pip', 'install', '-U', 'yt-dlp'])
         print("Para ffmpeg, si es necesario, actualízalo manualmente según tu sistema.")
@@ -82,7 +97,7 @@ def print_platform_info():
     Muestra información sobre el sistema operativo en uso.
     """
     plat_name = platform.system()
-    print(f"---- Plataforma detectada: {plat_name} ({platform.machine()}) ----")
+    print(f"\n---- Plataforma detectada: {plat_name} ({platform.machine()}) ----")
 
 def get_default_download_dir():
     """
@@ -142,7 +157,6 @@ def es_playlist(url):
 # =============== LÓGICA DE DESCARGA ===============
 
 def descargar_video_rapido(url, destino):
-    print("\n[Descarga rápida de video]")
     cmd = [
         YT_DLP_BIN,
         "--format", "mp4[height<=480]/best[height<=480]/best",
@@ -159,7 +173,7 @@ def descargar_video_calidad(url, destino):
         return
     consulta_cmd = [YT_DLP_BIN, "-F", url]
     subprocess.run(consulta_cmd)
-    formato = input("Introduce el código del formato deseado: (Ejemplo: 137+140): ").strip()
+    formato = input("Introduce el código del formato deseado (Ejemplo: 137+140): ").strip()
     cmd = [
         YT_DLP_BIN,
         "-f", formato,
@@ -235,7 +249,7 @@ if __name__ == "__main__":
             subprocess.run(['osascript', '-e', cmd])
             sys.exit(0)
     
-    # Aquí comienza el flujo normal (fuera del if anterior)
+    # Flujo normal
     print_platform_info()
     check_dependencies()
     check_update()
