@@ -401,3 +401,5 @@ brew upgrade yt-dlp
 
 - 👤 **Autor original**: [Moncholv](https://github.com/moncholv)  
 - 🤝 **Colaboraciones y mejoras**: [Eddevios (Edu)](https://github.com/eddevios) | [eddevios.com](https://eddevios.com)
+
+---
