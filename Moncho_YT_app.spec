@@ -1,7 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
-
 a = Analysis(
     ['script_descarga.py'],
     pathex=[],
@@ -9,16 +7,19 @@ a = Analysis(
         ('binaries/yt-dlp', 'binaries'),
         ('binaries/ffmpeg', 'binaries'),
     ],
-    datas=[],
+    datas=[
+        ('binaries/yt-dlp.version', 'binaries'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    cipher=block_cipher,
+    noarchive=False,
+    optimize=0,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
@@ -29,10 +30,10 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    console=False,  # Cambiado a False para usar el wrapper
+    upx=False,
+    console=False,  # La app abre Terminal por sí misma
     disable_windowed_traceback=False,
-    argv_emulation=True,  # Importante para macOS
+    argv_emulation=True,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
@@ -41,10 +42,9 @@ exe = EXE(
 coll = COLLECT(
     exe,
     a.binaries,
-    a.zipfiles,
     a.datas,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     name='Moncho_YT',
 )
@@ -54,17 +54,18 @@ app = BUNDLE(
     name='Moncho_YT.app',
     icon='assets/Moncho_YT.icns',
     bundle_identifier='com.moncholv.moncho-yt',
-    version='1.0.0',
+    version='1.1.1',
     info_plist={
         'NSPrincipalClass': 'NSApplication',
         'NSHighResolutionCapable': True,
         'CFBundleName': 'Moncho YT Downloader',
         'CFBundleDisplayName': 'Moncho YT',
         'CFBundleGetInfoString': 'Descargador de videos y audio de YouTube',
-        'CFBundleVersion': '1.0.0',
-        'CFBundleShortVersionString': '1.0.0',
+        'CFBundleVersion': '1.1.1',
+        'CFBundleShortVersionString': '1.1.1',
         'LSApplicationCategoryType': 'public.app-category.utilities',
         'LSBackgroundOnly': False,
         'LSMinimumSystemVersion': '10.13.0',
+        'NSAppleEventsUsageDescription': 'Moncho YT abre la app Terminal para mostrar el menú de descargas.',
     },
 )

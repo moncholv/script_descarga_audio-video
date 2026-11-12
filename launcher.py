@@ -1,3 +1,14 @@
+"""Lanzador legacy para macOS.
+
+La app actual (`script_descarga.py` + `Moncho_YT_app.spec`) ya abre Terminal por
+sí misma, así que este archivo no se usa en los builds.
+
+No lo uses como punto de entrada de PyInstaller: en un ejecutable congelado
+`sys.executable` es la propia app, y lanzarla con la ruta del script como
+argumento la reinicia (los argumentos se ignoran), provocando bucles como el
+antiguo fallo de "respondo s y vuelve a preguntar".
+"""
+
 import os
 import sys
 import subprocess

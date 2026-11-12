@@ -1,20 +1,52 @@
-# Python
-venv/
+# Archivos y binarios multiplataforma generados
+*.AppImage
+*.dmg
+*.exe
+*.dll
+*.bat
+*.cmd
+*.app
+*.pkg
+
+# Mac extras (no siempre aparecen, pero mejor ignorar)
+.Spotlight-V100
+.Trashes
+
+# Windows extras
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Python testing
+.coverage
+.tox/
+htmlcov/
+.cache/
+
+# Archivos de backup del editor
+*~
+*.bak
+*.tmp
+*.swp
+
+# Actualizaciones sobre entornos virtuales (por si algún IDE crea variantes)
+.venv/
+.ENV/
+.ENV*/
+
+# Archivos de sincronización (AppImage y otros)
+*.AppImage.zsync
+
+# Artefactos de compilación y entornos locales
+/build/
+/build-gui/
+/dist/
+/dist-gui/
+venv*/
 __pycache__/
 *.pyc
-*.pyo
-*.egg-info/
-
-# PyInstaller
-dist/
-build/
-*.spec~
-
-# Sistema
 .DS_Store
-Thumbs.db
-
-# IDEs
-.vscode/
-.idea/
-*.swp
+.tmp-test/
+.tmp-*/
+*.part

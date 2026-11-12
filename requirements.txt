@@ -1,2 +1,2 @@
-yt-dlp
-pyinstaller
+yt-dlp>=2026.10.26
+certifi>=2024.7.4

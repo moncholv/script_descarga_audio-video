@@ -1,7 +1,5 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-block_cipher = None
-
 a = Analysis(
     ['script_descarga.py'],
     pathex=[],
@@ -9,29 +7,31 @@ a = Analysis(
         ('binaries/yt-dlp-linux', 'binaries'),
         ('binaries/ffmpeg-linux', 'binaries'),
     ],
-    datas=[],
+    datas=[
+        ('binaries/yt-dlp-linux.version', 'binaries'),
+    ],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
-    cipher=block_cipher,
+    noarchive=False,
+    optimize=0,
 )
 
-pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
+pyz = PYZ(a.pure)
 
 exe = EXE(
     pyz,
     a.scripts,
     a.binaries,
-    a.zipfiles,
     a.datas,
     [],
     name='Moncho_YT',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=True,
